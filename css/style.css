@@ -35,10 +35,10 @@ section{padding:70px 5vw}
 h2{font-size:clamp(28px,5vw,46px);margin:0 0 28px}
 .sec{margin-bottom:60px}
 /* شريط أفقي متحرك: كل الصور بنفس الارتفاع (متوسط) والعرض حسب نسبة كل صورة، بدون قص */
-.gal{overflow:hidden;position:relative}
-.trk{display:flex;gap:14px;width:max-content;animation:gmq var(--d,40s) linear infinite}
-.gal:hover .trk,.gal:active .trk{animation-play-state:paused}
-@keyframes gmq{to{transform:translateX(calc(-50% - 7px))}}
+.gal{overflow-x:auto;overflow-y:hidden;position:relative;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.gal::-webkit-scrollbar{display:none}
+.trk{display:flex;gap:14px;width:max-content}
+.gal img{-webkit-user-drag:none;user-select:none}
 .gal figure{margin:0;flex:0 0 auto;overflow:hidden;border-radius:12px;background:var(--card);cursor:zoom-in;position:relative}
 .gal img{display:block;height:clamp(240px,40vw,400px);width:auto;max-width:none}
 .gal figcaption{position:absolute;inset:auto 0 0;padding:30px 12px 10px;background:linear-gradient(transparent,#000c);opacity:0;transition:.3s;font-size:14px}
