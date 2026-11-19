@@ -1,6 +1,6 @@
 (() => {
   if (window.__adm) return; window.__adm = 1;
-  const API = "/api/admin"; let pw = sessionStorage.getItem("srpw") || "", d, pend = {}, prev = {};
+  const API = "/api/admin"; let pw = sessionStorage.getItem("srpw") || "", d, pend = {}, prev = {}, del = [];
   const $ = s => ap.querySelector(s), esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
   const slug = n => n.toLowerCase().replace(/\.[^.]+$/, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "img";
   const call = async body => { const r = await fetch(API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password: pw, ...body }) }); const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(j.error || r.status); return j };
@@ -32,6 +32,8 @@
 <div class="row"><input id="ns" placeholder="قسم جديد"><button data-a="addsec">إضافة</button></div>
 <h3>إضافة تصميمات</h3><label>القسم</label><select id="dsec">${opts}</select><label>العنوان</label><input id="dt"><label>الصور (عدة ملفات)</label><input id="df" type="file" accept="image/*" multiple><button data-a="adddes">إضافة</button>
 <h3>التصميمات</h3><div class="mini">${d.designs.map((x, i) => `<div><img src="${esc(prev[x.src] || "/" + x.src)}"><input data-dt="${i}" value="${esc(x.title)}"><select data-mv="${i}">${d.sections.map(s => `<option value="${s.id}" ${s.id == x.sec ? "selected" : ""}>${esc(s.name)}</option>`).join("")}</select><button class="d" data-a="dd" data-i="${i}">حذف</button></div>`).join("")}</div>
+<h3>🎵 الموسيقى</h3>${d.music ? `<label>مسار الأغنية الحالية</label><div class="row"><input data-k="music" value="${esc(d.music)}"><button class="d" data-a="mdel">حذف</button></div><audio controls src="${esc(prev[d.music] || "/" + d.music)}" style="width:100%;margin-top:6px"></audio>` : `<p style="color:#9b9bab;font-size:13px">لا توجد أغنية حاليًا</p>`}
+<label>رفع أغنية جديدة (mp3، حتى 3MB — ترفع فوق القديمة وتستبدلها)</label><input id="mf" type="file" accept="audio/*"><button data-a="addmus">رفع الأغنية</button>
 <h3>Case Study</h3><label>العنوان</label><input data-k="cst" value="${esc(d.cs.title)}"><label>صور المشروع</label><input id="cf" type="file" accept="image/*" multiple><button data-a="addcs">إضافة</button>
 <div class="mini">${d.cs.images.map((u, i) => `<div><img src="${esc(prev[u] || "/" + u)}"><button data-a="cu" data-i="${i}">↑</button><button class="d" data-a="cd" data-i="${i}">✕</button></div>`).join("")}</div>
 <h3>التواصل</h3>${d.socials.map((s, i) => `<div class="row"><input data-sc="n${i}" value="${esc(s.n)}"><input data-sc="u${i}" value="${esc(s.u)}"><button class="d" data-a="sd" data-i="${i}">✕</button></div>`).join("")}<button data-a="addsoc">+ منصة</button>
@@ -40,7 +42,7 @@
   }
   ap.addEventListener("input", e => {
     const t = e.target, k = t.dataset;
-    if (k.k == "name") d.name = t.value; if (k.k == "tag") d.tag = t.value; if (k.k == "planets") d.planets = t.checked; if (k.k == "cst") d.cs.title = t.value;
+    if (k.k == "name") d.name = t.value; if (k.k == "tag") d.tag = t.value; if (k.k == "planets") d.planets = t.checked; if (k.k == "cst") d.cs.title = t.value; if (k.k == "music") d.music = t.value.trim();
     if (k.sn) d.sections[+k.sn].name = t.value; if (k.dt) d.designs[+k.dt].title = t.value; if (k.mv) d.designs[+k.mv].sec = t.value;
     if (k.sc) d.socials[+k.sc.slice(1)][k.sc[0]] = t.value;
   });
@@ -67,13 +69,24 @@
     if (a == "dd") d.designs.splice(i, 1);
     if (a == "addcs") addFiles($("#cf"), "case-study", p => d.cs.images.push(p));
     if (a == "cu") sw(d.cs.images); if (a == "cd") d.cs.images.splice(i, 1);
+    if (a == "addmus") {
+      const f = $("#mf").files[0];
+      if (!f) return alert("اختر ملف أغنية أولًا");
+      if (f.size > 3.2 * 1024 * 1024) return alert("حجم الملف أكبر من 3.2MB. صغّره (ضغط mp3 بجودة 96kbps) أو ارفعه من GitHub مباشرة داخل فولدر audio وضع مساره في خانة المسار.");
+      if (d.music && d.music.startsWith("audio/")) del.push(d.music);
+      const ext = (f.name.match(/\.(mp3|m4a|ogg|wav)$/i) || [, "mp3"])[1].toLowerCase();
+      const p = `audio/${slug(f.name)}-${Date.now().toString(36)}.${ext}`;
+      pend[p] = f; prev[p] = URL.createObjectURL(f); d.music = p;
+    }
+    if (a == "mdel") { if (d.music && d.music.startsWith("audio/")) del.push(d.music); d.music = "" }
     if (a == "addsoc") d.socials.push({ n: "New", u: "https://" }); if (a == "sd") d.socials.splice(i, 1);
     if (a == "save") {
       const m = $("#msg"); b.disabled = true;
       try {
-        const used = new Set([...d.designs.map(x => x.src), ...d.cs.images]);
-        for (const p of Object.keys(pend)) { if (!used.has(p)) { delete pend[p]; continue } m.textContent = "رفع " + p.split("/").pop() + "…"; await call({ action: "upload", path: p, content: await b64(await shrink(pend[p])) }); delete pend[p] }
+        const used = new Set([...d.designs.map(x => x.src), ...d.cs.images, d.music]);
+        for (const p of Object.keys(pend)) { if (!used.has(p)) { delete pend[p]; continue } m.textContent = "رفع " + p.split("/").pop() + "…"; await call({ action: "upload", path: p, content: await b64(p.startsWith("audio/") ? pend[p] : await shrink(pend[p])) }); delete pend[p] }
         m.textContent = "حفظ المحتوى…"; await call({ action: "save", data: d });
+        for (const p of del.splice(0)) { try { await call({ action: "delete", path: p }) } catch (e) { } }
         m.textContent = "✅ تم. سيظهر على الموقع خلال دقيقة تقريبًا.";
       } catch (err) { m.textContent = "❌ " + err.message } b.disabled = false; return;
     }
