@@ -3,15 +3,55 @@
   "tag": "Graphic Designer",
   "planets": true,
   "sections": [
-    {"id":"logo","name":"Logo Design"},
-    {"id":"social","name":"Social Media Design"},
-    {"id":"web","name":"Web Design"},
-    {"id":"branding","name":"Branding"},
-    {"id":"posters","name":"Posters & Flyers"},
-    {"id":"packaging","name":"Packaging Design"},
-    {"id":"presentation","name":"Presentation Design"}
+    {
+      "id": "logo",
+      "name": "Logo Design"
+    },
+    {
+      "id": "social",
+      "name": "Social Media Design"
+    },
+    {
+      "id": "web",
+      "name": "Web Design"
+    },
+    {
+      "id": "branding",
+      "name": "Branding"
+    },
+    {
+      "id": "posters",
+      "name": "Posters & Flyers"
+    },
+    {
+      "id": "packaging",
+      "name": "Packaging Design"
+    },
+    {
+      "id": "presentation",
+      "name": "Presentation Design"
+    }
   ],
-  "designs": [],
-  "cs": {"title":"Case Study","images":[]},
-  "socials": [{"n":"Instagram","u":"https://instagram.com/"}]
+  "designs": [
+    {
+      "sec": "logo",
+      "title": "Design",
+      "src": "images/designs/file-00000000ae00820ab5248938fd5471af-mwnxclkv.webp"
+    },
+    {
+      "sec": "logo",
+      "title": "Design",
+      "src": "images/designs/acff84cc7f6a8d44faf2c5cb9ccf6599-mwnxcvpn.webp"
+    }
+  ],
+  "cs": {
+    "title": "Case Study",
+    "images": []
+  },
+  "socials": [
+    {
+      "n": "Instagram",
+      "u": "https://instagram.com/"
+    }
+  ]
 }
