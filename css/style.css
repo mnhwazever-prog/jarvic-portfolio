@@ -23,10 +23,13 @@ body{margin:0;background:var(--bg);color:var(--fg);font-family:Inter,system-ui,"
 section{padding:70px 5vw}
 h2{font-size:clamp(28px,5vw,46px);margin:0 0 28px}
 .sec{margin-bottom:60px}
-/* الصور بمقاسها الأصلي: بدون قص وبدون تكبير. تصغر فقط لو أكبر من عرض الشاشة */
-.gal{display:flex;flex-wrap:wrap;gap:14px;align-items:flex-start}
-.gal figure{margin:0;flex:0 0 auto;max-width:100%;overflow:hidden;border-radius:12px;background:var(--card);cursor:zoom-in;position:relative}
-.gal img{display:block;max-width:100%;height:auto;width:auto}
+/* شريط أفقي متحرك: كل الصور بنفس الارتفاع (متوسط) والعرض حسب نسبة كل صورة، بدون قص */
+.gal{overflow:hidden;position:relative}
+.trk{display:flex;gap:14px;width:max-content;animation:gmq var(--d,40s) linear infinite}
+.gal:hover .trk,.gal:active .trk{animation-play-state:paused}
+@keyframes gmq{to{transform:translateX(calc(-50% - 7px))}}
+.gal figure{margin:0;flex:0 0 auto;overflow:hidden;border-radius:12px;background:var(--card);cursor:zoom-in;position:relative}
+.gal img{display:block;height:clamp(240px,40vw,400px);width:auto;max-width:none}
 .gal figcaption{position:absolute;inset:auto 0 0;padding:30px 12px 10px;background:linear-gradient(transparent,#000c);opacity:0;transition:.3s;font-size:14px}
 .gal figure:hover figcaption{opacity:1}
 .empty{color:var(--mut);font-size:14px}
@@ -41,4 +44,4 @@ footer a:hover{background:var(--ac);border-color:var(--ac)}
 #lb button{position:absolute;background:none;border:0;color:#fff;font-size:44px;cursor:pointer;padding:16px}
 #lb .x{top:env(safe-area-inset-top,0px);right:8px}#lb .l{left:6px}#lb .r{right:6px}
 #snd{position:fixed;bottom:16px;left:16px;z-index:5;background:#000a;color:var(--mut);border:1px solid #333;border-radius:99px;padding:8px 14px;font-size:12px;cursor:pointer}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.gal{overflow-x:auto}}
