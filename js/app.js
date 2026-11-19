@@ -28,3 +28,54 @@ function beep(){if(!sound)return;try{const c=new AudioContext(),o=c.createOscill
 
 render();
 fetch("data/site.json",{cache:"no-cache"}).then(r=>r.json()).then(j=>{cfg=j;render()}).catch(e=>console.error(e));
+
+/* ===== حركة الكواكب والنجوم (تتفاعل مع اللمس والماوس) ===== */
+(()=>{
+ const hero=document.querySelector(".hero");
+ if(!hero||matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+ /* للتحكم: SPEED سرعة الحركة، RANGE مدى الحركة، PUSH قوة الدفع عند اللمس، R نطاق التأثير بالبكسل */
+ const SPEED=1.5,RANGE=1.4,PUSH=1.2,R=170;
+ const rnd=(a,b)=>a+Math.random()*(b-a);
+ const add=(cls,style)=>{const e=document.createElement("i");e.className=cls;if(style)e.style.cssText=style;hero.appendChild(e);return e};
+ add("pl p5");add("pl p6");const moon=add("pl moon");
+ for(let i=0;i<22;i++){const s=rnd(2,5);add("pl st",`left:${rnd(0,100)}%;top:${rnd(0,100)}%;width:${s}px;height:${s}px;animation-delay:${-rnd(0,4)}s`)}
+ add("shoot");add("shoot s2");
+ hero.classList.add("phys");
+ let bodies=[],mx=-1e4,my=-1e4,run=true,last=performance.now();
+ const measure=()=>bodies.forEach(b=>{b.cx=b.el.offsetLeft+b.el.offsetWidth/2;b.cy=b.el.offsetTop+b.el.offsetHeight/2;b.r=b.el.offsetWidth/2});
+ bodies=[...hero.querySelectorAll(".pl:not(.moon)")].map(el=>{const st=el.classList.contains("st");
+  return{el,st,p1:el.classList.contains("p1"),cx:0,cy:0,r:0,px:0,py:0,vx:0,vy:0,
+   ax:st?rnd(6,16):rnd(50,110)*RANGE,ay:st?rnd(6,16):rnd(40,90)*RANGE,
+   fx:rnd(.12,.3)*SPEED,fy:rnd(.1,.28)*SPEED,a:rnd(0,6.28),b:rnd(0,6.28),k:st?.5:1}});
+ measure();addEventListener("resize",measure);addEventListener("load",measure);
+ const pos=(x,y)=>{const r=hero.getBoundingClientRect();mx=x-r.left;my=y-r.top};
+ hero.addEventListener("pointermove",e=>pos(e.clientX,e.clientY));
+ hero.addEventListener("touchmove",e=>{const t=e.touches[0];if(t)pos(t.clientX,t.clientY)},{passive:true});
+ const leave=()=>{mx=my=-1e4};
+ hero.addEventListener("pointerleave",leave);hero.addEventListener("touchend",leave);hero.addEventListener("pointercancel",leave);
+ /* لمسة سريعة = دفعة قوية للأجسام القريبة */
+ hero.addEventListener("pointerdown",e=>{pos(e.clientX,e.clientY);const t=performance.now()/1000;
+  bodies.forEach(b=>{const x=b.cx+Math.sin(t*b.fx+b.a)*b.ax+b.px,y=b.cy+Math.cos(t*b.fy+b.b)*b.ay+b.py,dx=x-mx,dy=y-my,d=Math.hypot(dx,dy)||1;
+   if(d<320){const f=(1-d/320)*900*PUSH*(b.st?.4:1);b.vx+=dx/d*f;b.vy+=dy/d*f}})});
+ const frame=now=>{
+  if(!run)return;
+  const dt=Math.min(.05,(now-last)/1000),t=now/1000;last=now;
+  let p1x=0,p1y=0;
+  for(const b of bodies){
+   if(!b.r&&!b.st)continue;
+   const gx=Math.sin(t*b.fx+b.a)*b.ax,gy=Math.cos(t*b.fy+b.b)*b.ay;
+   const dx=b.cx+gx+b.px-mx,dy=b.cy+gy+b.py-my,d=Math.hypot(dx,dy)-b.r;
+   if(d<R&&d>-b.r){const f=Math.pow(1-Math.max(d,0)/R,2)*2600*PUSH*dt*(b.st?.3:1),n=Math.hypot(dx,dy)||1;b.vx+=dx/n*f;b.vy+=dy/n*f}
+   b.vx-=b.px*6*dt*b.k;b.vy-=b.py*6*dt*b.k;
+   const dm=Math.exp(-3*dt);b.vx*=dm;b.vy*=dm;b.px+=b.vx*dt;b.py+=b.vy*dt;
+   const tx=gx+b.px,ty=gy+b.py;
+   b.el.style.transform=`translate3d(${tx.toFixed(1)}px,${ty.toFixed(1)}px,0)`;
+   if(b.p1){p1x=b.cx+tx;p1y=b.cy+ty}
+  }
+  /* قمر يدور حول الكوكب الأحمر */
+  if(p1x){const a=t*1.1*SPEED,h=moon.offsetWidth/2;
+   moon.style.transform=`translate3d(${(p1x+Math.cos(a)*95-h).toFixed(1)}px,${(p1y+Math.sin(a)*38-h).toFixed(1)}px,0)`}
+  requestAnimationFrame(frame)};
+ new IntersectionObserver(es=>{const v=es[0].isIntersecting;if(v&&!run){run=true;last=performance.now();requestAnimationFrame(frame)}run=v}).observe(hero);
+ requestAnimationFrame(frame);
+})();
