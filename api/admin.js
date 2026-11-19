@@ -32,8 +32,17 @@ module.exports = async (req, res) => {
       return res.json({ ok: true });
     }
     if (b.action === "upload") {
-      if (!/^images\/(designs|case-study)\/[a-z0-9._-]+\.(webp|png|jpg|jpeg|gif)$/.test(b.path || "")) throw new Error("مسار غير مسموح");
-      await put(b.path, b.content, "Add image " + b.path);
+      if (!/^(images\/(designs|case-study)\/[a-z0-9._-]+\.(webp|png|jpg|jpeg|gif)|audio\/[a-z0-9._-]+\.(mp3|m4a|ogg|wav))$/.test(b.path || "")) throw new Error("مسار غير مسموح");
+      await put(b.path, b.content, "Add file " + b.path);
+      return res.json({ ok: true });
+    }
+    if (b.action === "delete") {
+      if (!/^audio\/[a-z0-9._-]+\.(mp3|m4a|ogg|wav)$/.test(b.path || "")) throw new Error("مسار غير مسموح");
+      const cur = await gh(`${b.path}?ref=${BRANCH}`);
+      if (!cur.ok) return res.json({ ok: true });
+      const sha = (await cur.json()).sha;
+      const r = await gh(b.path, { method: "DELETE", body: JSON.stringify({ message: "Remove " + b.path, sha, branch: BRANCH }) });
+      if (!r.ok) throw new Error("GitHub: " + (await r.text()).slice(0, 200));
       return res.json({ ok: true });
     }
     res.status(400).json({ error: "action" });
