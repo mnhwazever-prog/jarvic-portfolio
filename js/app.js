@@ -6,7 +6,8 @@ function render(){
  document.querySelectorAll(".pl").forEach(p=>p.style.display=cfg.planets?"":"none");
  $("#strips").innerHTML=cfg.sections.map(s=>{const t=`<span>${esc(s.name)} ✦</span>`.repeat(8);return `<div class="strip" data-s="${s.id}">${t}${t}</div>`}).join("");
  $("#work").innerHTML=cfg.sections.map(s=>{const ds=cfg.designs.filter(d=>d.sec===s.id).sort((a,b)=>(a.order||0)-(b.order||0));
-  return `<div class="sec rv" id="sec-${s.id}"><h2>${esc(s.name)}</h2>`+(ds.length?`<div class="gal">${ds.map((d,i)=>`<figure data-s="${s.id}" data-i="${i}"><img loading="lazy" src="${safe(d.src)}" alt="${esc(d.title)}"><figcaption>${esc(d.title)}</figcaption></figure>`).join("")}</div>`:`<p class="empty">Coming soon</p>`)+`</div>`}).join("");
+  const one=ds.map((d,i)=>`<figure data-s="${s.id}" data-i="${i}"><img src="${safe(d.src)}" alt="${esc(d.title)}"><figcaption>${esc(d.title)}</figcaption></figure>`).join(""),reps=Math.max(1,Math.ceil(6/Math.max(ds.length,1))),half=one.repeat(reps),dur=Math.max(20,ds.length*reps*6);
+  return `<div class="sec rv" id="sec-${s.id}"><h2>${esc(s.name)}</h2>`+(ds.length?`<div class="gal"><div class="trk" style="--d:${dur}s">${half}${half}</div></div>`:`<p class="empty">Coming soon</p>`)+`</div>`}).join("");
  $("#cst").textContent=cfg.cs.title;$("#case").innerHTML=cfg.cs.images.map(u=>`<img loading="lazy" src="${safe(u)}" alt="">`).join("")||'<p class="empty">Coming soon</p>';
  $("#soc").innerHTML=cfg.socials.map(s=>`<a href="${safe(s.u)}" target="_blank" rel="noopener">${esc(s.n)}</a>`).join("");
  io();
