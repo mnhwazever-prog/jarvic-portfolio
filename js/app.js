@@ -1,6 +1,6 @@
 let cfg={name:"S.R.",tag:"",planets:true,sections:[],designs:[],cs:{title:"Case Study",images:[]},socials:[]},list=[],li=0,sound=false;
 const $=s=>document.querySelector(s),esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-const safe=u=>/^(https:|images\/)/.test(u)?u:"#";
+const safe=u=>/^(https:|images\/|audio\/)/.test(u)?u:"#";
 function render(){
  $("#nm").textContent=cfg.name;$("#tg").textContent=cfg.tag;
  document.querySelectorAll(".pl").forEach(p=>p.style.display=cfg.planets?"":"none");
@@ -23,11 +23,20 @@ function show(){$("#lb").classList.add("on");$("#lb img").src=safe(list[li].src)
 const nav=d=>{li=(li+d+list.length)%list.length;show()};
 $("#lb .x").onclick=()=>$("#lb").classList.remove("on");$("#lb .l").onclick=()=>nav(-1);$("#lb .r").onclick=()=>nav(1);
 addEventListener("keydown",e=>{if(!$("#lb").classList.contains("on"))return;if(e.key=="Escape")$("#lb .x").click();if(e.key=="ArrowLeft")nav(-1);if(e.key=="ArrowRight")nav(1)});
-$("#snd").onclick=()=>{sound=!sound;$("#snd").textContent=sound?"🔊 Sound on":"🔇 Sound off"};
+/* الأغنية: تشتغل عند الضغط على زر الصوت لو فيه أغنية مرفوعة من لوحة التحكم */
+let bgm=null;
+function music(){
+ const src=cfg.music?safe(cfg.music):"#";
+ if(!sound||src==="#"){if(bgm)bgm.pause();return}
+ if(!bgm||bgm._s!==src){if(bgm)bgm.pause();bgm=new Audio(src);bgm._s=src;bgm.loop=true;bgm.volume=.5}
+ bgm.play().catch(()=>{})
+}
+document.addEventListener("visibilitychange",()=>{if(!bgm)return;if(document.hidden)bgm.pause();else if(sound)bgm.play().catch(()=>{})});
+$("#snd").onclick=()=>{sound=!sound;$("#snd").textContent=sound?"🔊 Sound on":"🔇 Sound off";if(sound)beep();music()};
 function beep(){if(!sound)return;try{const c=new AudioContext(),o=c.createOscillator(),g=c.createGain();o.frequency.value=520;g.gain.value=.03;o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.08)}catch(e){}}
 
 render();
-fetch("data/site.json",{cache:"no-cache"}).then(r=>r.json()).then(j=>{cfg=j;render()}).catch(e=>console.error(e));
+fetch("data/site.json",{cache:"no-cache"}).then(r=>r.json()).then(j=>{cfg=j;render();music()}).catch(e=>console.error(e));
 
 /* ===== شريط التصميمات: حركة تلقائية + سحب بالإصبع/الماوس + الضغط على أي تصميم ===== */
 (()=>{
