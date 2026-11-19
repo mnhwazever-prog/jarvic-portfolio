@@ -12,7 +12,7 @@
 #ap .d{background:#8b1d2e}#ap .g{background:#333}#ap .big{background:#ff4d6d;font-size:16px;padding:13px 22px}
 #ap .row{display:flex;gap:8px;align-items:center;margin:6px 0}#ap .row input{flex:1}
 #ap .mini{display:flex;flex-wrap:wrap;gap:10px}#ap .mini div{width:112px;font-size:11px;text-align:center;background:#16161f;padding:6px;border-radius:8px}
-#ap .mini img{width:100%;height:90px;object-fit:cover;border-radius:6px}#ap .bar{position:sticky;bottom:0;background:#0a0a10;padding:10px 0}`;
+#ap .mini img{width:100%;height:90px;object-fit:contain;border-radius:6px}#ap .bar{position:sticky;bottom:0;background:#0a0a10;padding:10px 0}`;
   document.head.appendChild(st);
   const ap = document.createElement("div"); ap.id = "ap"; document.body.appendChild(ap);
   const close = () => { ap.remove(); st.remove(); window.__adm = 0; history.replaceState(null, "", location.pathname) };
@@ -45,10 +45,18 @@
     if (k.sc) d.socials[+k.sc.slice(1)][k.sc[0]] = t.value;
   });
   const b64 = blob => new Promise(r => { const f = new FileReader(); f.onload = () => r(f.result.split(",")[1]); f.readAsDataURL(blob) });
+  // يحافظ على المقاس الأصلي (طول وعرض). لو الملف كبير يقلل الجودة تدريجيًا، ولا يصغّر المقاس إلا كحل أخير
   async function shrink(file) {
-    const bm = await createImageBitmap(file), s = Math.min(1, 2400 / Math.max(bm.width, bm.height)), c = document.createElement("canvas");
-    c.width = Math.round(bm.width * s); c.height = Math.round(bm.height * s); c.getContext("2d").drawImage(bm, 0, 0, c.width, c.height);
-    return new Promise(r => c.toBlob(r, "image/webp", .9));
+    const bm = await createImageBitmap(file), MAX = 3 * 1024 * 1024, toBlob = (c, q) => new Promise(r => c.toBlob(r, "image/webp", q));
+    let s = 1, blob;
+    for (;;) {
+      const c = document.createElement("canvas");
+      c.width = Math.round(bm.width * s); c.height = Math.round(bm.height * s);
+      c.getContext("2d").drawImage(bm, 0, 0, c.width, c.height);
+      for (const q of [.95, .88, .8, .7, .6]) { blob = await toBlob(c, q); if (blob && blob.size <= MAX) return blob }
+      if (s < .3) return blob;
+      s *= .85;
+    }
   }
   const addFiles = (inp, dir, fn) => { for (const f of inp.files) { const p = `images/${dir}/${slug(f.name)}-${Date.now().toString(36)}.webp`; pend[p] = f; prev[p] = URL.createObjectURL(f); fn(p) } };
   ap.addEventListener("click", async e => {
