@@ -1,0 +1,17 @@
+{
+  "name": "S.R.",
+  "tag": "Graphic Designer",
+  "planets": true,
+  "sections": [
+    {"id":"logo","name":"Logo Design"},
+    {"id":"social","name":"Social Media Design"},
+    {"id":"web","name":"Web Design"},
+    {"id":"branding","name":"Branding"},
+    {"id":"posters","name":"Posters & Flyers"},
+    {"id":"packaging","name":"Packaging Design"},
+    {"id":"presentation","name":"Presentation Design"}
+  ],
+  "designs": [],
+  "cs": {"title":"Case Study","images":[]},
+  "socials": [{"n":"Instagram","u":"https://instagram.com/"}]
+}
