@@ -7,7 +7,7 @@ function render(){
  $("#strips").innerHTML=cfg.sections.map(s=>{const t=`<span>${esc(s.name)} ✦</span>`.repeat(8);return `<div class="strip" data-s="${s.id}">${t}${t}</div>`}).join("");
  $("#work").innerHTML=cfg.sections.map(s=>{const ds=cfg.designs.filter(d=>d.sec===s.id).sort((a,b)=>(a.order||0)-(b.order||0));
   const one=ds.map((d,i)=>`<figure data-s="${s.id}" data-i="${i}"><img src="${safe(d.src)}" alt="${esc(d.title)}"><figcaption>${esc(d.title)}</figcaption></figure>`).join(""),reps=Math.max(1,Math.ceil(6/Math.max(ds.length,1))),half=one.repeat(reps),dur=Math.max(20,ds.length*reps*6);
-  return `<div class="sec rv" id="sec-${s.id}"><h2>${esc(s.name)}</h2>`+(ds.length?`<div class="gal"><div class="trk" style="--d:${dur}s">${half}${half}</div></div>`:`<p class="empty">Coming soon</p>`)+`</div>`}).join("");
+  return `<div class="sec rv" id="sec-${s.id}"><h2>${esc(s.name)}</h2>`+(ds.length?`<div class="gal"><div class="trk" style="--d:${dur}s">${half}${half}${half}</div></div>`:`<p class="empty">Coming soon</p>`)+`</div>`}).join("");
  $("#cst").textContent=cfg.cs.title;$("#case").innerHTML=cfg.cs.images.map(u=>`<img loading="lazy" src="${safe(u)}" alt="">`).join("")||'<p class="empty">Coming soon</p>';
  $("#soc").innerHTML=cfg.socials.map(s=>`<a href="${safe(s.u)}" target="_blank" rel="noopener">${esc(s.n)}</a>`).join("");
  io();
@@ -28,6 +28,40 @@ function beep(){if(!sound)return;try{const c=new AudioContext(),o=c.createOscill
 
 render();
 fetch("data/site.json",{cache:"no-cache"}).then(r=>r.json()).then(j=>{cfg=j;render()}).catch(e=>console.error(e));
+
+/* ===== شريط التصميمات: حركة تلقائية + سحب بالإصبع/الماوس + الضغط على أي تصميم ===== */
+(()=>{
+ if(matchMedia("(prefers-reduced-motion:reduce)").matches)return;
+ const SP=45,WAIT=2500; /* SP سرعة الحركة التلقائية (بكسل/ثانية)، WAIT مدة التوقف بعد لمسك (مللي ثانية) */
+ let last=performance.now();
+ const gal=e=>e.target.closest?e.target.closest(".gal"):null;
+ const hold=e=>{const g=gal(e);if(g)g._p=performance.now()+WAIT};
+ ["touchstart","touchmove","touchend","wheel","pointerdown"].forEach(n=>document.addEventListener(n,hold,{passive:true}));
+ document.addEventListener("pointerover",e=>{if(e.pointerType!=="mouse")return;const g=gal(e);if(g)g._hv=true});
+ document.addEventListener("pointerout",e=>{if(e.pointerType!=="mouse")return;const g=gal(e);if(g&&!g.contains(e.relatedTarget))g._hv=false});
+ /* سحب بالماوس على الكمبيوتر */
+ let dg=null;
+ document.addEventListener("pointerdown",e=>{if(e.pointerType!=="mouse")return;const g=gal(e);if(g)dg={g,x:e.clientX,l:g.scrollLeft,m:false}});
+ addEventListener("pointermove",e=>{if(!dg)return;const dx=e.clientX-dg.x;if(Math.abs(dx)>5)dg.m=true;if(dg.m){dg.g.scrollLeft=dg.l-dx;dg.g._p=performance.now()+WAIT}});
+ addEventListener("pointerup",()=>{if(dg&&dg.m)dg.g._nc=performance.now()+80;dg=null});
+ document.addEventListener("click",e=>{const g=gal(e);if(g&&performance.now()<(g._nc||0)){e.stopImmediatePropagation();e.preventDefault()}},true);
+ addEventListener("resize",()=>document.querySelectorAll(".gal").forEach(g=>g._h=0));
+ const vis=new IntersectionObserver(es=>es.forEach(x=>x.target._v=x.isIntersecting));
+ const tick=now=>{
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  document.querySelectorAll(".gal").forEach(g=>{
+   const t=g.firstElementChild;if(!t)return;
+   if(!g._o){g._o=1;vis.observe(g)}
+   if(!g._i){if(![...t.querySelectorAll("img")].every(i=>i.complete))return;g._h=(t.scrollWidth+14)/3;if(!g._h)return;g._i=1;g.scrollLeft=g._x=g._h}
+   if(!g._h)g._h=(t.scrollWidth+14)/3;
+   if(g._v===false)return;
+   if(now<(g._p||0)||g._hv){g._x=g.scrollLeft;return}
+   const h=g._h;let x=g._x+SP*dt;
+   if(x>=1.5*h)x-=h;else if(x<.5*h)x+=h;
+   g._x=x;g.scrollLeft=x});
+  requestAnimationFrame(tick)};
+ requestAnimationFrame(tick);
+})();
 
 /* ===== حركة الكواكب والنجوم (تتفاعل مع اللمس والماوس) ===== */
 (()=>{
