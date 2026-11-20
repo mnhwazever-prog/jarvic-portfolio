@@ -81,14 +81,28 @@ fetch("data/site.json",{cache:"no-cache"}).then(r=>r.json()).then(j=>{cfg=j;rend
  const rnd=(a,b)=>a+Math.random()*(b-a);
  const add=(cls,style)=>{const e=document.createElement("i");e.className=cls;if(style)e.style.cssText=style;hero.appendChild(e);return e};
  add("pl p5");add("pl p6");const moon=add("pl moon");
+ /* رائد فضاء: يهبط من الأعلى أول ما الصفحة تفتح، وبعدها يطفو ويتمايل ويتفاعل مع اللمس */
+ add("pl astro").innerHTML='<div class="ai"><svg viewBox="0 0 120 150" aria-hidden="true"><defs><radialGradient id="vg" cx="35%" cy="30%" r="80%"><stop offset="0" stop-color="#8f84ff"/><stop offset=".55" stop-color="#2a2466"/><stop offset="1" stop-color="#0d0b24"/></radialGradient></defs>'
+ +'<path d="M60 96C60 118 30 112 22 140" fill="none" stroke="#ffffff44" stroke-width="2.5" stroke-dasharray="2 5" stroke-linecap="round"/>'
+ +'<rect x="28" y="50" width="64" height="48" rx="12" fill="#b9bccd"/>'
+ +'<path d="M45 100L36 132" stroke="#f3f3f7" stroke-width="17" stroke-linecap="round"/><path d="M75 100L88 128" stroke="#f3f3f7" stroke-width="17" stroke-linecap="round"/>'
+ +'<rect x="26" y="124" width="22" height="16" rx="7" fill="#ff4d6d" transform="rotate(14 37 132)"/><rect x="79" y="120" width="22" height="16" rx="7" fill="#ff4d6d" transform="rotate(-24 90 128)"/>'
+ +'<path d="M38 60L14 82" stroke="#f3f3f7" stroke-width="15" stroke-linecap="round"/><path d="M82 60L106 74" stroke="#f3f3f7" stroke-width="15" stroke-linecap="round"/>'
+ +'<circle cx="12" cy="84" r="9" fill="#6c5ce7"/><circle cx="108" cy="76" r="9" fill="#6c5ce7"/>'
+ +'<rect x="36" y="52" width="48" height="50" rx="16" fill="#f3f3f7"/>'
+ +'<rect x="47" y="66" width="26" height="17" rx="4" fill="#2b2b3d"/><circle cx="54" cy="74.5" r="3" fill="#ff4d6d"/><circle cx="64" cy="74.5" r="3" fill="#2dd4bf"/>'
+ +'<rect x="36" y="90" width="48" height="6" fill="#ff4d6d" opacity=".9"/>'
+ +'<circle cx="60" cy="34" r="29" fill="#f3f3f7" stroke="#cfd2de" stroke-width="2"/>'
+ +'<ellipse cx="60" cy="36" rx="21" ry="17" fill="url(#vg)"/><ellipse cx="51" cy="29" rx="7" ry="3.5" fill="#fff" opacity=".55" transform="rotate(-25 51 29)"/>'
+ +'<rect x="55" y="2" width="10" height="7" rx="3" fill="#cfd2de"/></svg></div>';
  for(let i=0;i<22;i++){const s=rnd(2,5);add("pl st",`left:${rnd(0,100)}%;top:${rnd(0,100)}%;width:${s}px;height:${s}px;animation-delay:${-rnd(0,4)}s`)}
  add("shoot");add("shoot s2");
  hero.classList.add("phys");
  let bodies=[],mx=-1e4,my=-1e4,run=true,last=performance.now();
  const measure=()=>bodies.forEach(b=>{b.cx=b.el.offsetLeft+b.el.offsetWidth/2;b.cy=b.el.offsetTop+b.el.offsetHeight/2;b.r=b.el.offsetWidth/2});
- bodies=[...hero.querySelectorAll(".pl:not(.moon)")].map(el=>{const st=el.classList.contains("st");
+ bodies=[...hero.querySelectorAll(".pl:not(.moon)")].map(el=>{const st=el.classList.contains("st"),as=el.classList.contains("astro");
   return{el,st,p1:el.classList.contains("p1"),cx:0,cy:0,r:0,px:0,py:0,vx:0,vy:0,
-   ax:st?rnd(6,16):rnd(50,110)*RANGE,ay:st?rnd(6,16):rnd(40,90)*RANGE,
+   ax:st?rnd(6,16):as?rnd(25,45)*RANGE:rnd(50,110)*RANGE,ay:st?rnd(6,16):as?rnd(30,50)*RANGE:rnd(40,90)*RANGE,
    fx:rnd(.12,.3)*SPEED,fy:rnd(.1,.28)*SPEED,a:rnd(0,6.28),b:rnd(0,6.28),k:st?.5:1}});
  measure();addEventListener("resize",measure);addEventListener("load",measure);
  const pos=(x,y)=>{const r=hero.getBoundingClientRect();mx=x-r.left;my=y-r.top};
